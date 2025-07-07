@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>150-Day Workout Tracker</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap');
+
+    body {
+      background: linear-gradient(145deg, #0f0f0f, #1a1a1a);
+      color: #fff;
+      font-family: 'Poppins', sans-serif;
+      padding: 20px;
+      margin: 0;
+    }
+
+    h1, h2, h3 {
+      color: #00ffc8;
+      margin-bottom: 10px;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+      gap: 15px;
+      margin-top: 20px;
+    }
+
+    .day-btn, .back-btn, .complete-btn {
+      padding: 12px;
+      background: #1f1f1f;
+      border: 2px solid #333;
+      color: #fff;
+      font-weight: bold;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .day-btn:hover, .back-btn:hover, .complete-btn:hover {
+      background-color: #00ffc8;
+      color: #000;
+      transform: scale(1.03);
+    }
+
+    .day-btn.completed {
+      text-decoration: line-through;
+      background: #004d3c;
+      color: #aaffcc;
+    }
+
+    .card {
+      background: #1e1e1e;
+      padding: 20px;
+      border-radius: 15px;
+      box-shadow: 0 0 10px #00ffc830;
+      margin-bottom: 12px;
+      transition: transform 0.2s;
+    }
+
+    .card:hover {
+      transform: scale(1.01);
+    }
+
+    .card input {
+      width: 18px;
+      height: 18px;
+    }
+
+    .card p { color: #ccc; }
+@media (max-width: 768px) {
+  body {
+    padding: 10px;
+  }
+
+  h1, h2 {
+    font-size: 20px;
+    text-align: center;
+  }
+
+  .grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .day-btn, .complete-btn, .back-btn {
+    font-size: 14px;
+    padding: 10px;
+  }
+
+  .card {
+    padding: 15px;
+  }
+
+  #calorieChart {
+    width: 100% !important;
+    height: auto !important;
+  }
+
+  canvas {
+    max-width: 100%;
+  }
+}
+  </style>
+</head>
+<body>
+  <div id="app"></div>
+
+  <script>
+    const workoutPlan = [
+      {
+        title: "Chest and Shoulders",
+        workouts: [
+          { name: "Flat Dumbbell Press", baseSets: 3, baseReps: 20, calFactor: 0.35 },
+          { name: "Incline Pushups", baseSets: 5, baseReps: 30, calFactor: 0.45 },
+          { name: "Normal Pushups", baseSets: 3, baseReps: 20, calFactor: 0.45 },
+          { name: "Front Raises", baseSets: 4, baseReps: 20, calFactor: 0.35 },
+          { name: "Lateral Raises", baseSets: 4, baseReps: 20, calFactor: 0.35 },
+          { name: "Dumbbell Rows", baseSets: 4, baseReps: 20, calFactor: 0.35 }
+        ]
+      },
+      {
+        title: "Biceps and Abs",
+        workouts: [
+          { name: "Bicep Curl", baseSets: 4, baseReps: 20, calFactor: 0.35 },
+          { name: "Hammer Curls", baseSets: 4, baseReps: 20, calFactor: 0.35 },
+          { name: "Wrist Curls", baseSets: 5, baseReps: 30, calFactor: 0.3 },
+          { name: "Reverse Wrist Curls", baseSets: 5, baseReps: 30, calFactor: 0.3 },
+          { name: "Sit-ups", baseSets: 5, baseReps: 20, calFactor: 0.4 },
+          { name: "Russian Twists", baseSets: 5, baseReps: 40, calFactor: 0.35 },
+          { name: "Plank", baseSets: 5, baseReps: 60, calFactor: 0.18 }
+        ]
+      },
+      {
+        title: "Legs",
+        workouts: [
+          { name: "Squats", baseSets: 5, baseReps: 100, calFactor: 0.5 },
+          { name: "Jump Squats", baseSets: 5, baseReps: 50, calFactor: 0.55 }
+        ]
+      },
+      { title: "Rest Day", workouts: [] },
+      { title: "Biceps and Abs", workouts: [] },
+      { title: "Chest and Shoulders", workouts: [] },
+      { title: "Rest Day", workouts: [] }
+    ];
+
+    workoutPlan[4].workouts = workoutPlan[1].workouts;
+    workoutPlan[5].workouts = workoutPlan[0].workouts;
+
+    const app = document.getElementById("app");
+    let currentDay = null;
+    let completed = JSON.parse(localStorage.getItem("completed")) || {};
+
+    function getRoutine(dayNumber) {
+      const week = Math.floor((dayNumber - 1) / 7);
+      const dayIndex = (dayNumber - 1) % 7;
+      const plan = workoutPlan[dayIndex];
+      const adjustedWorkouts = plan.workouts.map((w) => {
+        const setInc = Math.floor(week / 1);
+        const repInc = Math.floor(week / 1) * 5;
+        const isPlank = w.name.toLowerCase().includes("plank");
+        return {
+          ...w,
+          sets: w.baseSets + Math.floor(setInc / 2),
+          reps: isPlank ? w.baseReps + 10 * week : w.baseReps + repInc,
+          calFactor: w.calFactor
+        };
+      });
+      return { title: plan.title, workouts: adjustedWorkouts };
+    }
+
+    function renderHome() {
+      app.innerHTML = `
+        <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 80vh;">
+          <h1 style="font-size: 32px; margin-bottom: 40px;">🏋️‍♂️ 150-Day Workout Challenge</h1>
+          <button class="complete-btn" style="font-size: 20px; padding: 12px 24px;" onclick="renderDays()">Start Workout</button>
+        </div>
+        <div style="position: fixed; top: 20px; right: 20px;">
+          <button class="complete-btn" onclick="renderDashboard()">📊 View Dashboard</button>
+        </div>
+      `;
+    }
+
+    function renderDays() {
+      const totalDays = 150;
+      const daysDone = Object.keys(completed).filter(k => !k.includes("-")).length;
+      const progressPercent = Math.floor((daysDone / totalDays) * 100);
+
+      app.innerHTML = `
+        <button class="complete-btn" onclick="renderDashboard()">📊 View Dashboard</button>
+        <div style="margin: 15px 0;">
+          <h2>Progress: ${daysDone}/${totalDays} Days Completed</h2>
+          <div style="background: #333; border-radius: 10px; overflow: hidden;">
+            <div style="width: ${progressPercent}%; background: #00ffc8; height: 20px;"></div>
+          </div>
+        </div>
+        <div class="grid">
+          ${Array.from({ length: 150 }, (_, i) => {
+            const day = i + 1;
+            const done = completed[day] ? 'completed' : '';
+            return `<button class="day-btn ${done}" onclick="showDay(${day})">Day ${day}</button>`;
+          }).join('')}
+        </div>
+      `;
+    }
+
+    function showDay(day) {
+      currentDay = day;
+      const { title, workouts } = getRoutine(day);
+      app.innerHTML = `<button class="back-btn" onclick="renderDays()">← Back</button>
+        <h2>Day ${day}: ${title}</h2>`;
+      workouts.forEach((w, idx) => {
+        const key = `${day}-${idx}`;
+        app.innerHTML += `<div class="card">
+          <h3>${w.name}</h3>
+          <p>Sets: ${w.sets} | Reps: ${w.reps}${w.name.toLowerCase().includes("plank") ? " sec" : ""}</p>
+          <input type="checkbox" onchange="toggleComplete('${key}')" ${completed[key] ? "checked" : ""}/>
+        </div>`;
+      });
+      app.innerHTML += `<button class="complete-btn" onclick="markDayComplete(${day})">✅ Complete Day ${day}</button>`;
+    }
+
+    function toggleComplete(key) {
+      completed[key] = !completed[key];
+      localStorage.setItem("completed", JSON.stringify(completed));
+    }
+
+    function markDayComplete(day) {
+      const { workouts } = getRoutine(day);
+      const allDone = workouts.every((_, idx) => completed[`${day}-${idx}`]);
+      if (allDone) {
+        completed[day] = true;
+        localStorage.setItem("completed", JSON.stringify(completed));
+        renderDays();
+      } else {
+        alert("Please complete all workouts before marking the day complete.");
+      }
+    }
+
+    function renderDashboard() {
+      const totalDays = 150;
+      const weeks = Math.ceil(totalDays / 7);
+      const weeklyCalories = Array(weeks).fill(0);
+      const dayKeys = Object.keys(completed).filter(k => !k.includes("-"));
+      let totalCalories = 0;
+      let totalSets = 0;
+      let totalWorkouts = 0;
+
+      for (let day = 1; day <= totalDays; day++) {
+        if (!completed[day]) continue;
+        const { workouts } = getRoutine(day);
+        const week = Math.floor((day - 1) / 7);
+        workouts.forEach((w, idx) => {
+          const key = `${day}-${idx}`;
+          if (completed[key]) {
+            const repsOrSecs = w.reps;
+            const factor = w.calFactor || 0.35;
+            const burned = repsOrSecs * w.sets * factor;
+            totalCalories += burned;
+            totalSets += w.sets;
+            totalWorkouts += 1;
+            weeklyCalories[week] += burned;
+          }
+        });
+      }
+
+      app.innerHTML = `
+        <button class="back-btn" onclick="renderDays()">← Back</button>
+        <h2>📊 Dashboard Summary</h2>
+        <div class="card">
+          <p><strong>✅ Days Completed:</strong> ${dayKeys.length}</p>
+          <p><strong>💪 Workouts Completed:</strong> ${totalWorkouts}</p>
+          <p><strong>🔥 Sets Completed:</strong> ${totalSets}</p>
+          <p><strong>⚡ Calories Burned (estimated):</strong> ${Math.round(totalCalories)} kcal</p>
+        </div>
+
+        <h2 style="margin-top: 30px;">📊 Weekly Calorie Chart</h2>
+        <canvas id="calorieChart" width="400" height="200"></canvas>
+      `;
+
+      setTimeout(() => {
+        const ctx = document.getElementById('calorieChart').getContext('2d');
+        new Chart(ctx, {
+          type: 'bar',
+          data: {
+            labels: weeklyCalories.map((_, i) => `Week ${i + 1}`),
+            datasets: [{
+              label: 'Calories Burned',
+              data: weeklyCalories.map(c => Math.round(c)),
+              backgroundColor: '#00ffc8',
+              borderColor: '#00c5a0',
+              borderWidth: 1
+            }]
+          },
+          options: {
+            scales: {
+              y: {
+                beginAtZero: true,
+                ticks: { color: '#fff' }
+              },
+              x: {
+                ticks: { color: '#fff' }
+              }
+            },
+            plugins: {
+              legend: { labels: { color: '#fff' } }
+            }
+          }
+        });
+      }, 100);
+    }
+
+    renderHome();
+  </script>
+</body>
+</html>
