@@ -7,7 +7,6 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap');
-
     body {
       background: linear-gradient(145deg, #0f0f0f, #1a1a1a);
       color: #fff;
@@ -15,19 +14,13 @@
       padding: 20px;
       margin: 0;
     }
-
-    h1, h2, h3 {
-      color: #00ffc8;
-      margin-bottom: 10px;
-    }
-
+    h1, h2, h3 { color: #00ffc8; margin-bottom: 10px; }
     .grid {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
       gap: 15px;
       margin-top: 20px;
     }
-
     .day-btn, .back-btn, .complete-btn {
       padding: 12px;
       background: #1f1f1f;
@@ -38,19 +31,16 @@
       cursor: pointer;
       transition: all 0.3s ease;
     }
-
     .day-btn:hover, .back-btn:hover, .complete-btn:hover {
       background-color: #00ffc8;
       color: #000;
       transform: scale(1.03);
     }
-
     .day-btn.completed {
       text-decoration: line-through;
       background: #004d3c;
       color: #aaffcc;
     }
-
     .card {
       background: #1e1e1e;
       padding: 20px;
@@ -59,52 +49,34 @@
       margin-bottom: 12px;
       transition: transform 0.2s;
     }
-
-    .card:hover {
-      transform: scale(1.01);
-    }
-
-    .card input {
-      width: 18px;
-      height: 18px;
-    }
-
+    .card:hover { transform: scale(1.01); }
     .card p { color: #ccc; }
-@media (max-width: 768px) {
-  body {
-    padding: 10px;
-  }
-
-  h1, h2 {
-    font-size: 20px;
-    text-align: center;
-  }
-
-  .grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
-
-  .day-btn, .complete-btn, .back-btn {
-    font-size: 14px;
-    padding: 10px;
-  }
-
-  .card {
-    padding: 15px;
-  }
-
-  #calorieChart {
-    width: 100% !important;
-    height: auto !important;
-  }
-
-  canvas {
-    max-width: 100%;
-  }
-}
+    .card input { width: 18px; height: 18px; }
+    @media (max-width: 768px) {
+      body { padding: 10px; }
+      h1, h2 { font-size: 20px; text-align: center; }
+      .grid { grid-template-columns: repeat(2, 1fr); }
+      .day-btn, .complete-btn, .back-btn {
+        font-size: 14px;
+        padding: 10px;
+      }
+      .card { padding: 15px; }
+      #calorieChart {
+        width: 100% !important;
+        height: auto !important;
+      }
+      canvas { max-width: 100%; }
+    }
   </style>
 </head>
 <body>
+  <div id="videoModal" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; background-color:rgba(0,0,0,0.8); z-index:1000; justify-content:center; align-items:center;">
+    <div style="position:relative; width:90%; max-width:600px;">
+      <iframe id="videoFrame" width="100%" height="315" frameborder="0" allowfullscreen></iframe>
+      <button onclick="closeVideo()" style="position:absolute; top:10px; right:10px; background:red; color:white; border:none; padding:5px 10px; cursor:pointer;">✖</button>
+    </div>
+  </div>
+
   <div id="app"></div>
 
   <script>
@@ -129,6 +101,8 @@
           { name: "Reverse Wrist Curls", baseSets: 5, baseReps: 30, calFactor: 0.3 },
           { name: "Sit-ups", baseSets: 5, baseReps: 20, calFactor: 0.4 },
           { name: "Russian Twists", baseSets: 5, baseReps: 40, calFactor: 0.35 },
+{ name: "Leg Raises", baseSets:5, baseReps:20,
+calFactor: 0.35 },
           { name: "Plank", baseSets: 5, baseReps: 60, calFactor: 0.18 }
         ]
       },
@@ -151,6 +125,34 @@
     const app = document.getElementById("app");
     let currentDay = null;
     let completed = JSON.parse(localStorage.getItem("completed")) || {};
+
+    function showTutorial(videoId) {
+      const modal = document.getElementById("videoModal");
+      const frame = document.getElementById("videoFrame");
+      frame.src = "https://www.youtube.com/embed/" + videoId + "?autoplay=1";
+      modal.style.display = "flex";
+    }
+
+    function closeVideo() {
+      const modal = document.getElementById("videoModal");
+      const frame = document.getElementById("videoFrame");
+      frame.src = "";
+      modal.style.display = "none";
+    }
+
+    function getStreak() {
+      const days = Object.keys(completed).filter(k => !k.includes("-")).map(Number).sort((a,b)=>a-b);
+      let streak = 1, maxStreak = 1;
+      for (let i = 1; i < days.length; i++) {
+        if (days[i] === days[i-1] + 1) {
+          streak++;
+          maxStreak = Math.max(maxStreak, streak);
+        } else {
+          streak = 1;
+        }
+      }
+      return maxStreak;
+    }
 
     function getRoutine(dayNumber) {
       const week = Math.floor((dayNumber - 1) / 7);
@@ -213,10 +215,12 @@
       workouts.forEach((w, idx) => {
         const key = `${day}-${idx}`;
         app.innerHTML += `<div class="card">
-          <h3>${w.name}</h3>
-          <p>Sets: ${w.sets} | Reps: ${w.reps}${w.name.toLowerCase().includes("plank") ? " sec" : ""}</p>
-          <input type="checkbox" onchange="toggleComplete('${key}')" ${completed[key] ? "checked" : ""}/>
-        </div>`;
+  <h3>${w.name}</h3>
+  <p>Sets: ${w.sets} | Reps: ${w.reps}${w.name.toLowerCase().includes("plank") ? " sec" : ""}</p>
+  <input type="checkbox" onchange="toggleComplete('${key}')" ${completed[key] ? "checked" : ""}/>
+  <br><br>
+  <button class="complete-btn" onclick="showTutorial('${getVideoId(w.name)}')">▶️ Watch Tutorial</button>
+</div>`;
       });
       app.innerHTML += `<button class="complete-btn" onclick="markDayComplete(${day})">✅ Complete Day ${day}</button>`;
     }
@@ -265,6 +269,8 @@
         });
       }
 
+      const streak = getStreak();
+
       app.innerHTML = `
         <button class="back-btn" onclick="renderDays()">← Back</button>
         <h2>📊 Dashboard Summary</h2>
@@ -273,8 +279,8 @@
           <p><strong>💪 Workouts Completed:</strong> ${totalWorkouts}</p>
           <p><strong>🔥 Sets Completed:</strong> ${totalSets}</p>
           <p><strong>⚡ Calories Burned (estimated):</strong> ${Math.round(totalCalories)} kcal</p>
+          <p><strong>🏅 Best Streak:</strong> ${streak} days</p>
         </div>
-
         <h2 style="margin-top: 30px;">📊 Weekly Calorie Chart</h2>
         <canvas id="calorieChart" width="400" height="200"></canvas>
       `;
@@ -295,13 +301,8 @@
           },
           options: {
             scales: {
-              y: {
-                beginAtZero: true,
-                ticks: { color: '#fff' }
-              },
-              x: {
-                ticks: { color: '#fff' }
-              }
+              y: { beginAtZero: true, ticks: { color: '#fff' } },
+              x: { ticks: { color: '#fff' } }
             },
             plugins: {
               legend: { labels: { color: '#fff' } }
@@ -310,7 +311,27 @@
         });
       }, 100);
     }
-
+function getVideoId(name) {
+  const map = {
+    "Flat Dumbbell Press": "YQ2s_Y7g5Qk",
+    "Incline Pushups": "Me9bHFAxnCs",
+    "Normal Pushups": "WDIpL0pjun0",
+    "Front Raises": "zkP0MsTcIVU",
+    "Lateral Raises": "XPPfnSEATJA",
+    "Dumbbell Rows": "DMo3HJoawrU",
+    "Bicep Curl": "cBSD6mQIPQk",
+    "Hammer Curls": "BRVDS6HVR9Q",
+    "Wrist Curls": "3VLTzIrnb5g",
+    "Reverse Wrist Curls": "osYPwlBiCRM",
+    "Sit-ups": "onaQ0v_J5uU",
+    "Russian Twists": "IJDOoVyVjhc",
+    "Leg Raises": "Cwuxy8eo7iw",
+    "Plank": "pvIjsG5Svck",
+    "Squats": "xqvCmoLULNY",
+    "Jump Squats": "BRfxI2Es2lE"
+  };
+  return map[name] || "YQ2s_Y7g5Qk"; // default video
+}
     renderHome();
   </script>
 </body>
