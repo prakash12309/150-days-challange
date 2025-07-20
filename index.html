@@ -68,6 +68,27 @@
       canvas { max-width: 100%; }
     }
   </style>
+  <!-- Web App Icon + Manifest -->
+<link rel="icon" type="image/png" sizes="512x512" href="https://cdn-icons-png.flaticon.com/512/2977/2977286.png" />
+<link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/2977/2977286.png" />
+<meta name="theme-color" content="#00ffc8" />
+
+<!-- Embedded manifest using data URI -->
+<link rel="manifest" href="data:application/manifest+json,{
+  &quot;name&quot;: &quot;150-Day Workout Tracker&quot;,
+  &quot;short_name&quot;: &quot;Workout&quot;,
+  &quot;start_url&quot;: &quot;.&quot;,
+  &quot;display&quot;: &quot;standalone&quot;,
+  &quot;background_color&quot;: &quot;#000000&quot;,
+  &quot;theme_color&quot;: &quot;#00ffc8&quot;,
+  &quot;icons&quot;: [
+    {
+      &quot;src&quot;: &quot;https://cdn-icons-png.flaticon.com/512/2977/2977286.png&quot;,
+      &quot;sizes&quot;: &quot;512x512&quot;,
+      &quot;type&quot;: &quot;image/png&quot;
+    }
+  ]
+}">
 </head>
 <body>
   <div id="videoModal" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; background-color:rgba(0,0,0,0.8); z-index:1000; justify-content:center; align-items:center;">
