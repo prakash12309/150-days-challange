@@ -1,11 +1,12 @@
 <!DOCTYPE html>
+
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>150-Day Workout Tracker</title>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <style>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>150-Day Workout Tracker</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
     @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap');
     body {
       background: linear-gradient(145deg, #0f0f0f, #1a1a1a);
@@ -68,39 +69,36 @@
       canvas { max-width: 100%; }
     }
   </style>
-  <!-- Web App Icon + Manifest -->
-<link rel="icon" type="image/png" sizes="512x512" href="https://cdn-icons-png.flaticon.com/512/2977/2977286.png" />
-<link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/2977/2977286.png" />
-<meta name="theme-color" content="#00ffc8" />
-
+<!-- Web App Icon + Manifest -->
+<link href="https://cdn-icons-png.flaticon.com/512/2977/2977286.png" rel="icon" sizes="512x512" type="image/png"/>
+<link href="https://cdn-icons-png.flaticon.com/512/2977/2977286.png" rel="apple-touch-icon"/>
+<meta content="#00ffc8" name="theme-color"/>
 <!-- Embedded manifest using data URI -->
-<link rel="manifest" href="data:application/manifest+json,{
-  &quot;name&quot;: &quot;150-Day Workout Tracker&quot;,
-  &quot;short_name&quot;: &quot;Workout&quot;,
-  &quot;start_url&quot;: &quot;.&quot;,
-  &quot;display&quot;: &quot;standalone&quot;,
-  &quot;background_color&quot;: &quot;#000000&quot;,
-  &quot;theme_color&quot;: &quot;#00ffc8&quot;,
-  &quot;icons&quot;: [
+<link href='data:application/manifest+json,{
+  "name": "150-Day Workout Tracker",
+  "short_name": "Workout",
+  "start_url": ".",
+  "display": "standalone",
+  "background_color": "#000000",
+  "theme_color": "#00ffc8",
+  "icons": [
     {
-      &quot;src&quot;: &quot;https://cdn-icons-png.flaticon.com/512/2977/2977286.png&quot;,
-      &quot;sizes&quot;: &quot;512x512&quot;,
-      &quot;type&quot;: &quot;image/png&quot;
+      "src": "https://cdn-icons-png.flaticon.com/512/2977/2977286.png",
+      "sizes": "512x512",
+      "type": "image/png"
     }
   ]
-}">
-</head>
+}' rel="manifest"/>
+<link href="data:application/manifest+json,{&amp;quot;name&amp;quot;:&amp;quot;150 Days Transformation&amp;quot;,&amp;quot;short_name&amp;quot;:&amp;quot;Workout&amp;quot;,&amp;quot;start_url&amp;quot;:&amp;quot;.&amp;quot;,&amp;quot;display&amp;quot;:&amp;quot;standalone&amp;quot;,&amp;quot;background_color&amp;quot;:&amp;quot;#000000&amp;quot;,&amp;quot;theme_color&amp;quot;:&amp;quot;#00ffc8&amp;quot;,&amp;quot;icons&amp;quot;:[{&amp;quot;src&amp;quot;:&amp;quot;https://cdn-icons-png.flaticon.com/512/2977/2977286.png&amp;quot;,&amp;quot;sizes&amp;quot;:&amp;quot;512x512&amp;quot;,&amp;quot;type&amp;quot;:&amp;quot;image/png&amp;quot;}]}" rel="manifest"/><link href="https://cdn-icons-png.flaticon.com/512/2977/2977286.png" rel="icon"/><link href="https://cdn-icons-png.flaticon.com/512/2977/2977286.png" rel="apple-touch-icon"/><meta content="#00ffc8" name="theme-color"/></head>
 <body>
-  <div id="videoModal" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; background-color:rgba(0,0,0,0.8); z-index:1000; justify-content:center; align-items:center;">
-    <div style="position:relative; width:90%; max-width:600px;">
-      <iframe id="videoFrame" width="100%" height="315" frameborder="0" allowfullscreen></iframe>
-      <button onclick="closeVideo()" style="position:absolute; top:10px; right:10px; background:red; color:white; border:none; padding:5px 10px; cursor:pointer;">✖</button>
-    </div>
-  </div>
-
-  <div id="app"></div>
-
-  <script>
+<div id="videoModal" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; background-color:rgba(0,0,0,0.8); z-index:1000; justify-content:center; align-items:center;">
+<div style="position:relative; width:90%; max-width:600px;">
+<iframe allowfullscreen="" frameborder="0" height="315" id="videoFrame" width="100%"></iframe>
+<button onclick="closeVideo()" style="position:absolute; top:10px; right:10px; background:red; color:white; border:none; padding:5px 10px; cursor:pointer;">✖</button>
+</div>
+</div>
+<div id="app"></div>
+<script>
     const workoutPlan = [
       {
         title: "Chest and Shoulders",
